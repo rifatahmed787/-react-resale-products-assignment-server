@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
@@ -38,6 +38,10 @@ function verifyJWT(req, res, next) {
 //run function
 async function run() {
   try {
+    const usersCollection = client.db("resaleProducts").collection("usersData");
+    const categoryCollection = client
+      .db("resaleProducts")
+      .collection("categoryData");
     const productsCollection = client
       .db("resaleProducts")
       .collection("productsData");
@@ -49,6 +53,34 @@ async function run() {
     app.get("/questions", async (req, res) => {
       const query = {};
       const result = await blogCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    //get three category items
+    app.get("/categories", async (req, res) => {
+      const query = {};
+      const result = await categoryCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    //get all products items
+    app.get("/products/:id", async (req, res) => {
+      const category_id = req.params.id;
+      const filter = { category_id };
+      const result = await productsCollection.find(filter).toArray();
+      res.send(result);
+    });
+
+    //jwt access token
+    // app.get("/jwt", async (req, res) => {
+    //   const email = req.query.email;
+    //   const query = { email: email };
+    // });
+
+    //post method for users information
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
       res.send(result);
     });
   } finally {

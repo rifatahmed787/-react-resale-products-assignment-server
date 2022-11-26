@@ -39,6 +39,9 @@ function verifyJWT(req, res, next) {
 async function run() {
   try {
     const usersCollection = client.db("resaleProducts").collection("usersData");
+    const bookingCollection = client
+      .db("resaleProducts")
+      .collection("bookingData");
     const categoryCollection = client
       .db("resaleProducts")
       .collection("categoryData");
@@ -71,16 +74,44 @@ async function run() {
       res.send(result);
     });
 
-    //jwt access token
-    // app.get("/jwt", async (req, res) => {
+    //get method for booking product
+    // app.get("/booking", async (req, res) => {
     //   const email = req.query.email;
+    //   const decodedEmail = req.decoded.email;
+    //   if (email !== decodedEmail) {
+    //     return res.status(403).send({ message: "forbidden access" });
+    //   }
     //   const query = { email: email };
+    //   const booking = await bookingCollection.find(query).toArray();
+    //   res.send(booking);
     // });
+
+    // jwt access token
+    app.get("/jwt", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user) {
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
+          expiresIn: "6h",
+        });
+        return res.send({ accessToken: token });
+      }
+      console.log(user);
+      res.status(403).send({ accessToken: "" });
+    });
 
     //post method for users information
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    //post methods for booking items
+    app.post("/booking", async (req, res) => {
+      const booking = req.body;
+      const result = await bookingCollection.insertOne(booking);
       res.send(result);
     });
   } finally {

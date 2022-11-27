@@ -112,7 +112,7 @@ async function run() {
 
     app.get("/booking", async (req, res) => {
       const email = req.query.email;
-      console.log(email);
+
       // const decodedEmail = req.decoded.email;
       // if (email !== decodedEmail) {
       //   return res.status(403).send({ message: "forbidden access" });
@@ -135,6 +135,14 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const result = await usersCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    //delete order from my order
+    app.delete("/booking/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await bookingCollection.deleteOne(filter);
       res.send(result);
     });
 

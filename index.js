@@ -109,13 +109,15 @@ async function run() {
     });
 
     //get method for booking product
+
     app.get("/booking", async (req, res) => {
       const email = req.query.email;
-      const decodedEmail = req.decoded.email;
-      if (email !== decodedEmail) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      const query = { email: email };
+      console.log(email);
+      // const decodedEmail = req.decoded.email;
+      // if (email !== decodedEmail) {
+      //   return res.status(403).send({ message: "forbidden access" });
+      // }
+      const query = { email };
       const booking = await bookingCollection.find(query).toArray();
       res.send(booking);
     });
@@ -126,6 +128,14 @@ async function run() {
       const query = {};
       const filter = await usersCollection.find(query).toArray();
       res.send(filter);
+    });
+
+    //delete method for delete user from allusers
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await usersCollection.deleteOne(filter);
+      res.send(result);
     });
 
     //post method for post products

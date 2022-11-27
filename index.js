@@ -52,6 +52,40 @@ async function run() {
       .db("resaleProducts")
       .collection("questionAndAnswer");
 
+    // jwt access token
+    app.get("/jwt", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user) {
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
+          expiresIn: "6h",
+        });
+        return res.send({ accessToken: token });
+      }
+      console.log(user);
+      res.status(403).send({ accessToken: "" });
+    });
+
+    //verify admin
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await usersCollection.findOne(query);
+      if (user.role !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
+    //get method for checking admin
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isAdmin: user?.role === "admin" });
+    });
+
     //get question and answer
     app.get("/questions", async (req, res) => {
       const query = {};
@@ -75,36 +109,54 @@ async function run() {
     });
 
     //get method for booking product
-    // app.get("/booking", async (req, res) => {
-    //   const email = req.query.email;
-    //   const decodedEmail = req.decoded.email;
-    //   if (email !== decodedEmail) {
-    //     return res.status(403).send({ message: "forbidden access" });
-    //   }
-    //   const query = { email: email };
-    //   const booking = await bookingCollection.find(query).toArray();
-    //   res.send(booking);
-    // });
-
-    // jwt access token
-    app.get("/jwt", async (req, res) => {
+    app.get("/booking", async (req, res) => {
       const email = req.query.email;
-      const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      if (user) {
-        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
-          expiresIn: "6h",
-        });
-        return res.send({ accessToken: token });
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res.status(403).send({ message: "forbidden access" });
       }
-      console.log(user);
-      res.status(403).send({ accessToken: "" });
+      const query = { email: email };
+      const booking = await bookingCollection.find(query).toArray();
+      res.send(booking);
+    });
+
+    //get users by get method
+    app.get("/users", async (req, res) => {
+      const user = req.body;
+      const query = {};
+      const filter = await usersCollection.find(query).toArray();
+      res.send(filter);
+    });
+
+    //post method for post products
+    app.post("/products", async (req, res) => {
+      const product = req.body;
+      const result = await productsCollection.insertOne(product);
+      res.send(result);
     });
 
     //post method for users information
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    //put method for upsert and make admin
+    app.put("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 

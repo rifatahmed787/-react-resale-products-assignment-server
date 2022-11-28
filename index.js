@@ -78,12 +78,28 @@ async function run() {
       next();
     };
 
-    //get method for checking admin
+    //get method for checking admin in useAdmin hook
     app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const user = await usersCollection.findOne(query);
       res.send({ isAdmin: user?.role === "admin" });
+    });
+
+    //get method for checking seller in useSeller hook
+    app.get("/users/seller/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isSeller: user?.type === "Seller" });
+    });
+
+    //get method for checking buyer in useBuyer hook
+    app.get("/users/buyer/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isBuyer: user?.type === "Buyer" });
     });
 
     //get question and answer
